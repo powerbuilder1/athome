@@ -1,6 +1,4 @@
-import sys
 import subprocess
-import os
 from decouple import config
 import time
 
