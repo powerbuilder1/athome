@@ -2,6 +2,7 @@ import sys
 import subprocess
 import os
 from decouple import config
+import time
 
 # dic of mac_address and associated name
 devices = {}
@@ -12,7 +13,7 @@ try:
         # array of [mac_address, name]
         line_arr = line.split("-")
         mac_address = line_arr[0]
-        name = line_arr[1]
+        name = line_arr[1][:len(line_arr[1])-1]
         # add mac_address and name to dic
         devices[mac_address] = name
 except FileNotFoundError:
@@ -22,17 +23,19 @@ finally:
 
 MAC_ADDRESS = config("MAC_ADDRESS")
 
+while True:
+    for entry in devices.items():
+        command = f"sudo arp-scan -l | grep {entry[0]}"
+        proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (stdout, stderr) = proc.communicate()
 
-command = f"sudo arp-scan -l | grep {MAC_ADDRESS}"
+        res = str(stdout, "utf8")
 
-proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-(stdout, stderr) = proc.communicate()
+        print(res)
 
-res = str(stdout, "utf8")
+        if len(res) > 0:
+            print(f"{entry[1]}, is da!")
+        else:
+            print(f"{entry[1]}, is ni da!")
 
-print(res)
-
-if len(res) > 0:
-    print("Is da!")
-else:
-    print("Is ni da!")
+    time.sleep(10)
